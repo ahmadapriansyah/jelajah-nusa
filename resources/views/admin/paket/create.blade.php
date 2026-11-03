@@ -133,24 +133,37 @@
             </div>
         </div>
 
-        <!-- Bagian 5: Foto Paket Wisata -->
+        <!-- Bagian 5: Foto Utama Paket Wisata (PENYESUAIAN PREVIEW & EVENT UI) -->
         <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
             <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
                 <span class="w-7 h-7 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs font-extrabold">5</span>
                 <h3 class="text-base font-extrabold text-slate-900">Foto Utama Paket Wisata</h3>
             </div>
 
-            <div class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-sky-500 transition bg-slate-50/50">
-                <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                <div class="mt-3 text-xs text-slate-600">
-                    <label for="foto" class="relative cursor-pointer font-bold text-sky-600 hover:text-sky-500 focus-within:outline-none">
-                        <span>Pilih berkas foto</span>
-                        <input id="foto" name="foto" type="file" accept="image/png,image/jpeg,image/jpg" class="sr-only">
-                    </label>
-                    <p class="text-slate-400 mt-1">Format JPG atau PNG (Maksimum 5 MB)</p>
+            <div class="border-2 border-dashed border-slate-200 hover:border-sky-500 rounded-2xl p-6 text-center transition bg-slate-50/50 cursor-pointer" onclick="document.getElementById('foto').click()">
+                
+                <input id="foto" name="foto" type="file" accept="image/png,image/jpeg,image/jpg" class="hidden" onchange="previewFoto(event)">
+
+                <!-- UI Default Sebelum Upload -->
+                <div id="uploadDefaultUI">
+                    <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="mt-3 text-xs text-slate-600">
+                        <span class="font-bold text-sky-600">Pilih berkas foto</span>
+                        <p class="text-slate-400 mt-1">Format JPG atau PNG (Maksimum 5 MB)</p>
+                    </div>
                 </div>
+
+                <!-- UI Preview Setelah Dipilih -->
+                <div id="uploadPreviewUI" class="hidden space-y-2">
+                    <img id="imgPreview" src="" class="max-h-44 mx-auto rounded-xl shadow-md object-cover border border-slate-200">
+                    <p id="imgName" class="text-xs font-bold text-slate-700"></p>
+                    <span class="text-xs font-extrabold text-emerald-600 inline-flex items-center gap-1">
+                        ✓ Foto Berhasil Dipilih (Klik untuk mengganti)
+                    </span>
+                </div>
+
             </div>
         </div>
 
@@ -167,8 +180,9 @@
 </div>
 
 <script>
-    function itineraryManager() {
-        return {
+    // Penanganan Alpine.js untuk Itinerary
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('itineraryManager', () => ({
             hariList: [
                 { judul: 'Keberangkatan & Perjalanan', aktivitas: 'Kumpul di meeting point, briefing perjalanan malam menuju destinasi.' }
             ],
@@ -180,6 +194,21 @@
                     this.hariList.splice(index, 1);
                 }
             }
+        }));
+    });
+
+    // Penanganan Preview Foto Upload
+    function previewFoto(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imgPreview').src = e.target.result;
+                document.getElementById('imgName').textContent = file.name;
+                document.getElementById('uploadDefaultUI').classList.add('hidden');
+                document.getElementById('uploadPreviewUI').classList.remove('hidden');
+            }
+            reader.readAsDataURL(file);
         }
     }
 </script>

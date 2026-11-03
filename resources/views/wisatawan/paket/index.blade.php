@@ -97,18 +97,32 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($paketList as $pkt)
             @php
-                $jadwalTerdekat = $pkt->jadwal_mendatang;
+                $jadwalTerdekat = $pkt->jadwal_mendatang ?? null;
+
+                // LOGIKA PENENTUAN GURU URL GAMBAR YANG FLEKSIBEL
+                $imgUrl = null;
+                if (!empty($pkt->foto)) {
+                    if (Str::startsWith($pkt->foto, ['http://', 'https://'])) {
+                        $imgUrl = $pkt->foto;
+                    } elseif (file_exists(public_path('storage/paket/' . $pkt->foto))) {
+                        $imgUrl = asset('storage/paket/' . $pkt->foto);
+                    } elseif (file_exists(public_path('storage/' . $pkt->foto))) {
+                        $imgUrl = asset('storage/' . $pkt->foto);
+                    } elseif (Str::startsWith($pkt->foto, 'images/')) {
+                        $imgUrl = asset($pkt->foto);
+                    }
+                }
             @endphp
             <div class="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col justify-between group">
                 
                 <div>
-                    <!-- Photo Cover -->
+                    <!-- Photo Cover Penyesuaian -->
                     <div class="h-52 bg-slate-800 relative overflow-hidden">
-                        @if($pkt->foto)
-                            <img src="{{ Str::startsWith($pkt->foto, 'images/') ? asset($pkt->foto) : asset('storage/' . $pkt->foto) }}" alt="{{ $pkt->nama_paket }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        @if($imgUrl)
+                            <img src="{{ $imgUrl }}" alt="{{ $pkt->nama_paket }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                         @else
                             <div class="w-full h-full bg-gradient-to-tr from-sky-600 via-indigo-700 to-slate-900 flex flex-col items-center justify-center p-6 text-center text-white">
-                                <svg class="w-10 h-10 text-sky-300/80 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <svg class="w-10 h-10 text-sky-300/80 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 <span class="text-xs font-extrabold uppercase tracking-widest text-sky-200">{{ $pkt->destinasi }}</span>
                             </div>
                         @endif
@@ -121,7 +135,7 @@
 
                         <div class="absolute bottom-3.5 right-3.5">
                             <span class="px-3 py-1 rounded-xl text-xs font-extrabold bg-slate-950/80 text-white backdrop-blur-md">
-                                {{ $pkt->durasi_label }}
+                                {{ $pkt->durasi_label ?? ($pkt->durasi . ' Hari') }}
                             </span>
                         </div>
                     </div>
@@ -148,12 +162,12 @@
                             @if($jadwalTerdekat)
                                 <div class="text-slate-600">
                                     <span class="text-[10px] text-slate-400 block font-medium">Berangkat:</span>
-                                    <strong class="text-slate-900">{{ $jadwalTerdekat->tanggal_berangkat->translatedFormat('d M Y') }}</strong>
+                                    <strong class="text-slate-900">{{ \Carbon\Carbon::parse($jadwalTerdekat->tanggal_berangkat)->translatedFormat('d M Y') }}</strong>
                                 </div>
                                 <div class="text-right">
                                     <span class="text-[10px] text-slate-400 block font-medium">Sisa Kuota:</span>
-                                    <span class="px-2 py-0.5 rounded-full font-bold text-[11px] {{ $jadwalTerdekat->sisa_kuota <= 3 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700' }}">
-                                        {{ $jadwalTerdekat->sisa_kuota }} Kursi
+                                    <span class="px-2 py-0.5 rounded-full font-bold text-[11px] {{ ($jadwalTerdekat->sisa_kuota ?? 0) <= 3 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700' }}">
+                                        {{ $jadwalTerdekat->sisa_kuota ?? 0 }} Kursi
                                     </span>
                                 </div>
                             @else
@@ -168,7 +182,9 @@
                     <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
                         <div>
                             <span class="text-[10px] text-slate-400 block font-medium">Mulai dari</span>
-                            <span class="text-lg font-extrabold text-sky-600">{{ $pkt->harga_format }}</span>
+                            <span class="text-lg font-extrabold text-sky-600">
+                                {{ $pkt->harga_format ?? ('Rp ' . number_format($pkt->harga, 0, ',', '.')) }}
+                            </span>
                             <span class="text-[10px] text-slate-400 block">/ orang</span>
                         </div>
                         <a href="{{ route('paket.show', $pkt->id) }}" class="px-4 py-2 bg-slate-900 hover:bg-sky-600 text-white text-xs font-bold rounded-xl transition shadow-xs">

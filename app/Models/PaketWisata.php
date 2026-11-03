@@ -64,6 +64,19 @@ class PaketWisata extends Model
         $malam = max(0, $this->durasi_hari - 1);
         return "{$this->durasi_hari}H{$malam}M";
     }
+    public function getFotoUrlAttribute()
+{
+    if ($this->foto && file_exists(public_path('storage/paket/' . $this->foto))) {
+        return asset('storage/paket/' . $this->foto);
+    }
+    
+    if ($this->foto && file_exists(public_path('storage/' . $this->foto))) {
+        return asset('storage/' . $this->foto);
+    }
+
+    
+    return 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80';
+}
 
     public function getJadwalMendatangAttribute()
     {
